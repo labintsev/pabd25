@@ -1,5 +1,29 @@
-from flask import Flask, render_template, request
-import json
+from flask import Flask, render_template, request 
+from logging.config import dictConfig
+
+dictConfig(
+    {
+        "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "formatter": "default",
+            },         
+            "file": {
+                "class": "logging.FileHandler",
+                "filename": "service/flask.log",
+                "formatter": "default",
+            },
+        },
+        "root": {"level": "DEBUG", "handlers": ["console", "file"]},
+    }
+)
 
 app = Flask(__name__)
 
@@ -15,7 +39,7 @@ def process_numbers():
     # Для примера просто возвращаем их обратно
     data = request.get_json()
     
-    print(data['number1'])
+    app.logger.info(f'Requst data: {data}')
     
     return {'status': 'success', 'data': 'Числа успешно обработаны'}
 
