@@ -74,7 +74,19 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('response').innerText = 'Ответ сервера: ' + JSON.stringify(data);
+                if(data['status'] == 'success'){
+                    const price = parseInt(data['data']);
+                    if(price > 0){
+                        const price_millions = parseInt(price / 1000_000);
+                        const price_thousands = parseInt((price % 1000_000) / 1000);
+                        document.getElementById('response').innerText = 'Примерная цена: ' + price_millions + ' млн ' + price_thousands + ' тыc руб.';
+                    } else {
+                        document.getElementById('response').innerText = 'Предсказана отрицательная цена.'
+                    }
+               } else {
+                    document.getElementById('response').innerText = 'Ошибка при обработке данных на сервере';
+                }
+                
             })
             .catch(error => {
                 console.error('Ошибка:', error);
