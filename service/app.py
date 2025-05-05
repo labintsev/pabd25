@@ -29,9 +29,9 @@ app = Flask(__name__)
 
 import joblib
 # Сохранение модели
-#  model_path = 'models/linear_regression_model.pkl'
+model_path = 'models/linear_regression_model.pkl'
 
-# loaded_model = joblib.load(model_path)
+loaded_model = joblib.load(model_path)
 
 
 # Маршрут для отображения формы
@@ -42,13 +42,14 @@ def index():
 # Маршрут для обработки данных формы
 @app.route('/api/numbers', methods=['POST'])
 def process_numbers():
-    # Здесь можно добавить обработку полученных чисел
-    # Для примера просто возвращаем их обратно
+
     data = request.get_json()
     
     app.logger.info(f'Requst data: {data}')
     try: 
-        price = float(data['area']) * 300_000
+        area = float(data['area']) 
+        price = loaded_model.predict([[area]])[0]
+        price = int(price)
     except  ValueError:
         return {'status': 'error', 'data': 'Ошибка парсинга данных'}
     return {'status': 'success', 'data': price }
