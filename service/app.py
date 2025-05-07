@@ -63,4 +63,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     app.config["model"] = joblib.load(args.model)
+    app.logger.info(f"Use model: {args.model}")
     app.run(debug=True)
