@@ -113,11 +113,13 @@ def test_model(model_path):
     # Оценка модели
     mse = mean_squared_error(y_test, y_pred)
     rmse = np.sqrt(mse)
+    mae = np.mean(np.abs(y_test - y_pred))
     r2_train = model.score(X_train, y_train)
     r2_test = model.score(X_test, y_test)
 
     logging.info(f"Test model. MSE: {mse:.2f}")
     logging.info(f"Test model. RMSE: {rmse:.2f}")
+    logging.info(f"Test model. MAE: {mae:.2f}")
     logging.info(f"Test model. R2 train: {r2_train:.2f}")
     logging.info(f"Test model. R2 test: {r2_test:.2f}")
 
