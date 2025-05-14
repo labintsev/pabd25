@@ -1,4 +1,12 @@
-"""This is full life cycle for ml model"""
+"""
+This is full life cycle for ml model.
+Linear regression with 5 features:
+- total_meters
+- floors_count
+- first_floor
+- last_floor
+- n_rooms (One Hot Encoded)
+"""
 
 import argparse
 import datetime
@@ -15,8 +23,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
 TEST_SIZE = 0.2
-N_ROOMS = 1
-MODEL_NAME = "linear_regression_v2.pkl"
+N_ROOMS = 1  # just for the parsing step
+MODEL_NAME = "linear_regression_v3.pkl"
 
 logging.basicConfig(
     filename="train.log",
@@ -59,19 +67,31 @@ def preprocess_data(test_size):
     raw_data_path = "./data/raw"
     file_list = glob.glob(raw_data_path + "/*.csv")
     logging.info(f"Preprocess_data. Use files to train: {file_list}")
-    main_df = pd.read_csv(file_list[0])
+    df = pd.read_csv(file_list[0])
     for i in range(1, len(file_list)):
         data = pd.read_csv(file_list[i])
-        df = pd.DataFrame(data)
-        main_df = pd.concat([main_df, df], axis=0)
+        df_i = pd.DataFrame(data)
+        df = pd.concat([df, df_i], axis=0)
 
-    main_df["url_id"] = main_df["url"].map(lambda x: x.split("/")[-2])
-    main_df = main_df[["url_id", "total_meters", "price"]].set_index("url_id")
-    main_df = main_df.sort_index()
-    main_df.drop_duplicates(inplace=True)
-    main_df = main_df[main_df["price"] < 100_000_000]
-    main_df = main_df[main_df["total_meters"] < 100]
-    train_df, test_df = train_test_split(main_df, test_size=test_size, shuffle=False)
+    df["url_id"] = df["url"].map(lambda x: x.split("/")[-2])
+    df = (
+        df[["url_id", "total_meters", "floor", "floors_count", "rooms_count", "price"]]
+        .set_index("url_id")
+        .sort_index()
+    )
+
+    df.drop_duplicates(inplace=True)
+    df = df[df["price"] < 100_000_000]
+    df = df[df["total_meters"] < 100]
+
+    df["rooms_1"] = df["rooms_count"] == 1
+    df["rooms_2"] = df["rooms_count"] == 2
+    df["rooms_3"] = df["rooms_count"] == 3
+    df["first_floor"] = df["floor"] == 1
+    df["last_floor"] = df["floor"] == df["floors_count"]
+    df.drop(columns=["floor", "rooms_count"], inplace=True)
+
+    train_df, test_df = train_test_split(df, test_size=test_size, shuffle=False)
 
     logging.info(f"Preprocess_data. train_df: {len(train_df)} samples")
     train_head = "\n" + str(train_df.head())
@@ -87,7 +107,17 @@ def preprocess_data(test_size):
 def train_model(model_path):
     """Train model and save with MODEL_NAME"""
     train_df = pd.read_csv("data/processed/train.csv")
-    X = train_df[["total_meters"]]  # Пока только один признак - площадь
+    X = train_df[
+        [
+            "total_meters",
+            "floors_count",
+            "rooms_1",
+            "rooms_2",
+            "rooms_3",
+            "first_floor",
+            "last_floor",
+        ]
+    ]
     y = train_df["price"]
     model = LinearRegression()
     model.fit(X, y)
@@ -95,6 +125,7 @@ def train_model(model_path):
     joblib.dump(model, model_path)
 
     logging.info(f"Train model. Total meters coef: {model.coef_[0]:.2f}")
+    logging.info(f"Other coefs: {model.coef_[1:]}")
     logging.info(f"Train model. Bias: {model.intercept_:.2f}")
 
 
@@ -102,9 +133,29 @@ def test_model(model_path):
     """Test model with new data"""
     test_df = pd.read_csv("data/processed/test.csv")
     train_df = pd.read_csv("data/processed/train.csv")
-    X_test = test_df[["total_meters"]]
+    X_test = test_df[
+        [
+            "total_meters",
+            "floors_count",
+            "rooms_1",
+            "rooms_2",
+            "rooms_3",
+            "first_floor",
+            "last_floor",
+        ]
+    ]
     y_test = test_df["price"]
-    X_train = train_df[["total_meters"]]
+    X_train = train_df[
+        [
+            "total_meters",
+            "floors_count",
+            "rooms_1",
+            "rooms_2",
+            "rooms_3",
+            "first_floor",
+            "last_floor",
+        ]
+    ]
     y_train = train_df["price"]
     model = joblib.load(model_path)
     # Предсказание на тестовой выборке

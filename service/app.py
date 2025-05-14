@@ -31,7 +31,7 @@ app = Flask(__name__)
 import joblib
 
 # Сохранение модели
-MODEL_NAME = "models/linear_regression_v1.pkl"
+MODEL_NAME = "models/linear_regression_v3.pkl"
 
 
 # Маршрут для отображения формы
@@ -48,11 +48,30 @@ def process_numbers():
 
     app.logger.info(f"Requst data: {data}")
     try:
-        area = float(data["area"])
-        price = app.config["model"].predict([[area]])[0]
-        price = int(price)
+        total_meters = float(data["area"])
+        floors_count = int(data["total_floors"])
+        rooms_1 = int(data["rooms"]) == 1
+        rooms_2 = int(data["rooms"]) == 2
+        rooms_3 = int(data["rooms"]) == 3
+        first_floor = int(data["floor"]) == 1
+        last_floor = int(data["floor"]) == floors_count
     except ValueError:
         return {"status": "error", "data": "Ошибка парсинга данных"}
+
+    price = app.config["model"].predict(
+        [
+            [
+                total_meters,
+                floors_count,
+                rooms_1,
+                rooms_2,
+                rooms_3,
+                first_floor,
+                last_floor,
+            ]
+        ]
+    )[0]
+    price = int(price)
     return {"status": "success", "data": price}
 
 
