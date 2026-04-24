@@ -43,10 +43,14 @@ venv/Scripts/activate
 pip install -r requirements.txt
 ```
 
-3. Запустите цикл сбора данных и обучения:
+3. Скачайте данные:
 ```bash
-python src/lifecycle.py --parse_data
+mkdir data/kaggle
+curl https://storage.yandexcloud.net/findatalab/kaggle/Housing.csv -o ./data/kaggle/Housing.csv
 ```
+
+4. Обучите модель в ноутбуке train.
+
 
 ### Признаки
 Используемые данные включают следующие характеристики:
@@ -75,9 +79,14 @@ Test - 231 квартира
 * R² Score test: 0.50
 
 ### Использование сервиса предиктивной аналитики в dev mode
+1. Создайте .env файл для переменных окружения:
+```txt
+APP_TOKEN=your_secret
+```
+
 1. Запустите сервис с указанием имени модели
 ```sh
-python service/app.py -m model_path
+python service/app.py -m models/linear_regression_model.pkl
 ```
 2. Веб приложение доступно по ссылке `http://127.0.0.1:5000` 
 3. API endpoint доступен  по ссылке `http://127.0.0.1:5000/api/numbers`

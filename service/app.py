@@ -65,25 +65,13 @@ def process_numbers():
     app.logger.info(f"Requst data: {data}")
     try:
         total_meters = float(data["area"])
-        floors_count = int(data["total_floors"])
-        rooms_1 = int(data["rooms"]) == 1
-        rooms_2 = int(data["rooms"]) == 2
-        rooms_3 = int(data["rooms"]) == 3
-        first_floor = int(data["floor"]) == 1
-        last_floor = int(data["floor"]) == floors_count
     except ValueError:
         return {"status": "error", "data": "Ошибка парсинга данных"}
 
     price = app.config["model"].predict(
         [
             [
-                total_meters,
-                floors_count,
-                rooms_1,
-                rooms_2,
-                rooms_3,
-                first_floor,
-                last_floor,
+                total_meters
             ]
         ]
     )[0]
